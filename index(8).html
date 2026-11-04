@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="google" content="notranslate">
+    
+    <title>Nervovi — AI wspierająca codzienność osób neurologicznych</title>
+    <meta name="description" content="Nervovi rozwija pomysły na praktyczne i dostępne wykorzystanie AI, które może wspierać codzienne życie osób z chorobami neurologicznymi i ich bliskich.">
+    <meta name="theme-color" content="#050508">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Inter:wght@300;400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --neon-pink: #ff007a;
+            --neon-cyan: #00f2ff;
+            --bg-dark: #050508;
+            --panel-bg: rgba(10, 12, 20, 0.85);
+            --text-main: #e0e6ed;
+            --text-dim: #94a3b8;
+            /* Delikatny blask paneli */
+            --panel-glow: rgba(0, 242, 255, 0.15);
+        }
+
+        * { box-sizing: border-box; }
+
+        body, html {
+            margin: 0; padding: 0;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            touch-action: pan-y; 
+        }
+
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 5;
+            background: linear-gradient(to bottom, rgba(255,255,255,0) 50%, rgba(0,0,0,0.05) 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .lang-switcher {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            z-index: 100;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--neon-cyan);
+            text-decoration: none;
+            border: 1px solid var(--neon-cyan);
+            padding: 5px 15px;
+            border-radius: 2px;
+            transition: all 0.3s;
+            background: rgba(0, 242, 255, 0.05);
+        }
+        .lang-switcher:hover {
+            box-shadow: 0 0 15px var(--neon-cyan);
+            background: rgba(0, 242, 255, 0.2);
+            color: #fff;
+        }
+
+        /* GŁÓWNE MENU */
+        .main-nav {
+            position: fixed;
+            top: 22px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 110;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            max-width: calc(100vw - 220px);
+            padding: 7px;
+            border: 1px solid rgba(0, 242, 255, 0.22);
+            border-radius: 9px;
+            background: rgba(5, 5, 8, 0.82);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.10);
+        }
+
+        .main-nav a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 36px;
+            padding: 0 12px;
+            border-radius: 5px;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.7px;
+            white-space: nowrap;
+            transition: all 0.25s ease;
+        }
+
+        .main-nav a:hover {
+            color: #fff;
+            background: rgba(0, 242, 255, 0.08);
+        }
+
+        .main-nav a.nav-service {
+            color: #fff;
+            border: 1px solid rgba(255, 0, 122, 0.75);
+            background: rgba(255, 0, 122, 0.12);
+            box-shadow: 0 0 15px rgba(255, 0, 122, 0.12);
+        }
+
+        .main-nav a.nav-service:hover {
+            color: #fff;
+            background: rgba(255, 0, 122, 0.22);
+            box-shadow: 0 0 22px rgba(255, 0, 122, 0.35);
+        }
+
+        /* MENU MOBILNE - domyślnie ukryte na komputerach */
+        .mobile-menu-toggle,
+        .mobile-nav {
+            display: none;
+        }
+
+        .mobile-menu-toggle {
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            z-index: 130;
+            width: 46px;
+            height: 46px;
+            padding: 0;
+            border: 1px solid rgba(0, 242, 255, 0.45);
+            border-radius: 8px;
+            background: rgba(5, 5, 8, 0.92);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            box-shadow: 0 0 18px rgba(0, 242, 255, 0.12);
+            cursor: pointer;
+        }
+
+        .mobile-menu-toggle span {
+            position: absolute;
+            left: 11px;
+            width: 22px;
+            height: 2px;
+            border-radius: 2px;
+            background: var(--neon-cyan);
+            box-shadow: 0 0 8px rgba(0, 242, 255, 0.7);
+            transition: transform 0.25s ease, top 0.25s ease, opacity 0.2s ease;
+        }
+
+        .mobile-menu-toggle span:nth-child(1) { top: 14px; }
+        .mobile-menu-toggle span:nth-child(2) { top: 21px; }
+        .mobile-menu-toggle span:nth-child(3) { top: 28px; }
+
+        .mobile-menu-toggle[aria-expanded="true"] span:nth-child(1) {
+            top: 21px;
+            transform: rotate(45deg);
+        }
+
+        .mobile-menu-toggle[aria-expanded="true"] span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .mobile-menu-toggle[aria-expanded="true"] span:nth-child(3) {
+            top: 21px;
+            transform: rotate(-45deg);
+        }
+
+        .mobile-nav {
+            position: fixed;
+            top: 66px;
+            left: 12px;
+            right: 12px;
+            z-index: 125;
+            flex-direction: column;
+            gap: 6px;
+            padding: 10px;
+            border: 1px solid rgba(0, 242, 255, 0.28);
+            border-radius: 10px;
+            background: rgba(5, 5, 8, 0.96);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 0 24px rgba(0, 242, 255, 0.14);
+        }
+
+        .mobile-nav.is-open {
+            display: flex;
+        }
+
+        .mobile-nav a {
+            display: flex;
+            align-items: center;
+            min-height: 46px;
+            padding: 0 14px;
+            border-radius: 6px;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.7px;
+        }
+
+        .mobile-nav a:hover,
+        .mobile-nav a:focus-visible {
+            color: #fff;
+            background: rgba(0, 242, 255, 0.08);
+            outline: none;
+        }
+
+        .mobile-nav a.nav-service {
+            color: #fff;
+            border: 1px solid rgba(255, 0, 122, 0.75);
+            background: rgba(255, 0, 122, 0.12);
+        }
+
+        /* MOCNO WYRÓŻNIONA SEKCJA USŁUGI WWW */
+        .service-highlight {
+            border: 1px solid rgba(255, 0, 122, 0.65);
+            background:
+                radial-gradient(circle at 100% 0%, rgba(255, 0, 122, 0.12), transparent 28rem),
+                radial-gradient(circle at 0% 100%, rgba(0, 242, 255, 0.08), transparent 26rem),
+                var(--panel-bg);
+            box-shadow:
+                0 0 34px rgba(255, 0, 122, 0.16),
+                0 0 22px rgba(0, 242, 255, 0.08),
+                inset 0 0 18px rgba(255, 255, 255, 0.02);
+        }
+
+        .service-highlight:hover {
+            border-color: var(--neon-pink);
+            box-shadow:
+                0 0 42px rgba(255, 0, 122, 0.25),
+                0 0 26px rgba(0, 242, 255, 0.12);
+        }
+
+        .service-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 18px;
+            padding: 8px 12px;
+            border: 1px solid rgba(0, 242, 255, 0.45);
+            border-radius: 999px;
+            color: var(--neon-cyan);
+            background: rgba(0, 242, 255, 0.06);
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+        }
+
+        .service-highlight h2 {
+            margin-top: 0;
+            margin-bottom: 18px;
+            font-size: clamp(1.9rem, 5vw, 3rem);
+            line-height: 1.05;
+        }
+
+        .service-highlight .service-lead {
+            max-width: 680px;
+            color: #fff;
+            font-size: clamp(1.15rem, 2.6vw, 1.38rem);
+            line-height: 1.55;
+            font-weight: 600;
+        }
+
+        .service-points {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+            margin: 24px 0 28px;
+        }
+
+        .service-points span {
+            padding: 8px 10px;
+            border: 1px solid rgba(0, 242, 255, 0.20);
+            border-radius: 999px;
+            color: #bffbff;
+            background: rgba(0, 242, 255, 0.05);
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.70rem;
+            font-weight: 700;
+        }
+
+        .service-cta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .service-cta .cyber-btn {
+            padding: 15px 22px;
+            font-weight: 700;
+        }
+
+        .service-cta-note {
+            color: var(--text-dim);
+            font-size: 0.86rem;
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        #hero-canvas-wrapper {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100vh;
+            z-index: 1;
+            background: radial-gradient(circle at center, #101020 0%, #050508 100%);
+        }
+
+        #brain-canvas { width: 100%; height: 100%; display: block; }
+
+        .content-overlay {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+        }
+
+        header {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        header h1 {
+            font-family: 'Roboto Mono', monospace;
+            font-size: clamp(1.2rem, 6vw, 2rem);
+            color: var(--neon-cyan);
+            letter-spacing: 10px;
+            text-shadow: 0 0 20px rgba(0, 242, 255, 0.8);
+            margin: 0;
+        }
+
+        .main-container {
+            max-width: 850px;
+            margin: 0 auto 100px;
+            padding: 0 20px;
+        }
+
+        /* POPRAWIONE: Regularne podświetlenie okienek */
+        .glass-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            
+            /* Cienka, regularna ramka */
+            border: 1px solid rgba(0, 242, 255, 0.25);
+            
+            /* Regularny blask na zewnątrz i delikatny wewnątrz */
+            box-shadow: 
+                0 0 20px var(--panel-glow), 
+                inset 0 0 10px rgba(0, 242, 255, 0.05);
+            
+            border-radius: 16px; /* Nieco mniejszy promień dla lepszego balansu */
+            padding: 60px 50px;
+            margin-bottom: 50px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Opcjonalny efekt po najechaniu - sprawia, że strona żyje */
+        .glass-panel:hover {
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.3);
+            border-color: rgba(0, 242, 255, 0.5);
+        }
+
+        h2 {
+            font-family: 'Roboto Mono', monospace;
+            color: var(--neon-pink);
+            font-size: 1.6rem;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            text-shadow: 0 0 10px rgba(255, 0, 122, 0.3);
+        }
+
+        h2::before { content: "> "; color: var(--neon-cyan); margin-right: 15px; }
+
+        p { 
+            color: var(--text-dim); 
+            line-height: 1.8; 
+            margin-bottom: 25px; 
+            font-size: 1.1rem;
+        }
+        strong { color: #fff; }
+
+        .cyber-btn {
+            display: inline-block;
+            font-family: 'Roboto Mono', monospace;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 4px;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            color: var(--neon-cyan);
+            border: 1px solid var(--neon-cyan);
+            background: transparent;
+        }
+
+        .cyber-btn:hover {
+            background: rgba(0, 242, 255, 0.1);
+            box-shadow: 0 0 20px var(--neon-cyan);
+            color: #fff;
+        }
+        
+        .cyber-btn.pink {
+             color: var(--neon-pink);
+             border-color: var(--neon-pink);
+        }
+        .cyber-btn.pink:hover {
+            box-shadow: 0 0 20px var(--neon-pink);
+            background: rgba(255, 0, 122, 0.1);
+        }
+
+        .social-links { display: flex; gap: 15px; margin-top: 30px; flex-wrap: wrap; }
+
+        .contact-box {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #222;
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .contact-label { font-family: 'Roboto Mono', monospace; color: var(--text-dim); font-size: 0.7rem; display: block; margin-bottom: 5px;}
+        
+        .contact-value { 
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1.0rem; 
+            color: var(--neon-white); 
+            text-decoration: none;
+            border-bottom: 1px dashed var(--neon-pink);
+        }
+
+        footer {
+            text-align: center;
+            padding: 80px 20px;
+            font-family: 'Roboto Mono', monospace;
+            color: #444;
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .glass-panel { padding: 40px 25px; }
+            header h1 { letter-spacing: 5px; }
+
+            .lang-switcher {
+                top: 14px;
+                right: 12px;
+                font-size: 0.62rem;
+                padding: 5px 9px;
+            }
+
+            /* Na telefonach desktopowe menu znika całkowicie */
+            .main-nav {
+                display: none;
+            }
+
+            /* Pojawia się klasyczny przycisk hamburger */
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .service-highlight {
+                padding: 42px 24px;
+            }
+
+            .service-cta {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .service-cta .cyber-btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            .service-cta-note {
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="main-nav" aria-label="Główne menu">
+        <a href="#start">START</a>
+        <a href="#misja">NASZA MISJA</a>
+        <a href="#ai">AI W PRAKTYCE</a>
+        <a href="#dla-kogo">DLA KOGO</a>
+        <a href="#kontakt">KONTAKT</a>
+    </nav>
+
+    <button class="mobile-menu-toggle" type="button" aria-label="Otwórz menu" aria-expanded="false" aria-controls="mobile-nav">
+        <span></span><span></span><span></span>
+    </button>
+
+    <nav class="mobile-nav" id="mobile-nav" aria-label="Menu mobilne">
+        <a href="#start">START</a>
+        <a href="#misja">NASZA MISJA</a>
+        <a href="#ai">AI W PRAKTYCE</a>
+        <a href="#dla-kogo">DLA KOGO</a>
+        <a href="#kontakt">KONTAKT</a>
+    </nav>
+
+    <span class="lang-switcher" aria-label="Wersja polska">PL</span>
+
+    <div id="hero-canvas-wrapper" aria-hidden="true">
+        <canvas id="brain-canvas"></canvas>
+    </div>
+
+    <div class="scanlines" aria-hidden="true"></div>
+
+    <div class="content-overlay">
+        <header id="start">
+            <h1>NERVOVI</h1>
+            <p style="color: var(--neon-cyan); font-family: 'Roboto Mono'; margin: 18px 20px 0; opacity: 0.9; letter-spacing: 1px;">TECHNOLOGIA, KTÓRA WSPIERA CZŁOWIEKA</p>
+            <p style="color: var(--text-dim); font-family: 'Roboto Mono'; margin: 12px 20px 0; opacity: 0.8; font-size: 0.78rem;">[ AI DLA CODZIENNOŚCI OSÓB NEUROLOGICZNYCH ]</p>
+        </header>
+
+        <main class="main-container">
+            <section class="glass-panel" id="misja">
+                <p style="font-size: 1.3rem; color: #fff; font-weight: 300;">
+                    Życie z chorobą neurologiczną potrafi zmienić codzienne sprawy. Chcemy sprawdzać, jak mądrze zaprojektowana technologia może ułatwiać je osobom chorującym i ich bliskim.
+                </p>
+                <p>
+                    <strong>Nervovi</strong> to inicjatywa przygotowująca powołanie fundacji. Łączymy perspektywę osób z doświadczeniem choroby neurologicznej z możliwościami sztucznej inteligencji, aby tworzyć rozwiązania odpowiadające na realne potrzeby.
+                </p>
+                <p style="font-family: 'Roboto Mono', monospace; color: var(--neon-cyan); font-size: 0.85rem;">// STATUS: FUNDACJA W PRZYGOTOWANIU — PRACUJEMY NAD STATUTEM</p>
+                <a href="#ai" class="cyber-btn">ZOBACZ, JAK MOŻE POMÓC AI &gt;</a>
+            </section>
+
+            <section class="glass-panel service-highlight" id="ai">
+                <div class="service-badge">NERVOVI // AI_FOR_EVERYDAY_LIFE</div>
+                <h2>AI, KTÓRA POMAGA W CODZIENNOŚCI</h2>
+                <p class="service-lead">
+                    Technologia powinna dopasowywać się do człowieka. Chcemy rozwijać i testować proste narzędzia AI, które mogą wspierać organizację dnia, komunikację i dostęp do zrozumiałych informacji.
+                </p>
+                <div class="service-points" aria-label="Obszary, w których AI może wspierać codzienność">
+                    <span>PLAN DNIA</span>
+                    <span>PRZYPOMNIENIA</span>
+                    <span>ŁATWIEJSZA KOMUNIKACJA</span>
+                    <span>DOSTĘPNE INFORMACJE</span>
+                    <span>WSPARCIE BLISKICH</span>
+                </div>
+                <p>
+                    To kierunek, nad którym pracujemy. Rozwiązania będziemy projektować z udziałem osób, które mają z nich korzystać, i rozwijać odpowiedzialnie — z troską o prywatność, bezpieczeństwo oraz dostępność.
+                </p>
+                <div class="service-cta">
+                    <a href="#kontakt" class="cyber-btn pink">POROZMAWIAJMY O POTRZEBACH &gt;</a>
+                    <span class="service-cta-note">Twoje doświadczenie może pomóc nam wyznaczyć dobry kierunek.</span>
+                </div>
+            </section>
+
+            <section class="glass-panel" id="dla-kogo">
+                <h2>DLA KOGO TWORZYMY</h2>
+                <p>
+                    Chcemy słuchać osób z różnymi doświadczeniami neurologicznymi — zarówno po udarze, jak i żyjących z chorobami przewlekłymi lub rzadkimi. Każda osoba i jej codzienne potrzeby są inne.
+                </p>
+                <p>
+                    Interesują nas między innymi potrzeby osób po <strong>udarze</strong> oraz osób żyjących ze <strong>stwardnieniem rozsianym, chorobą Parkinsona, padaczką, dystonią, migreną</strong> i innymi schorzeniami neurologicznymi. Ta lista nie zamyka zakresu naszych zainteresowań.
+                </p>
+                <p>
+                    Chcemy uwzględniać także perspektywę rodzin, opiekunów i osób wspierających — bo dobre rozwiązania powinny pomagać w prawdziwym życiu, a nie tylko dobrze wyglądać na ekranie.
+                </p>
+            </section>
+
+            <section class="glass-panel">
+                <h2>JAK WYOBRAŻAMY SOBIE WSPARCIE</h2>
+                <p><strong style="color: var(--neon-cyan); font-family: 'Roboto Mono';">01. Prościej //</strong> Pomoc w rozbijaniu zadań na małe kroki, planowaniu dnia i pamiętaniu o codziennych sprawach.</p>
+                <p><strong style="color: var(--neon-cyan); font-family: 'Roboto Mono';">02. Na własnych zasadach //</strong> Ułatwienia w tworzeniu wiadomości, porządkowaniu myśli lub przygotowaniu pytań do rozmowy.</p>
+                <p><strong style="color: var(--neon-cyan); font-family: 'Roboto Mono';">03. Razem //</strong> Narzędzia i materiały, które mogą wspierać także bliskich oraz osoby pomagające na co dzień.</p>
+                <p style="font-size: 0.92rem;">AI ma być dodatkowym wsparciem. Nie zastępuje lekarza, terapii ani indywidualnej porady medycznej.</p>
+            </section>
+
+            <section class="glass-panel">
+                <h2>OD CZEGO ZACZYNAMY</h2>
+                <p>
+                    Jesteśmy na etapie przygotowań. Pracujemy nad statutem i kierunkiem działań, poznajemy potrzeby osób neurologicznych oraz szukamy partnerów, z którymi będziemy mogli tworzyć rozwiązania odpowiedzialnie i krok po kroku.
+                </p>
+                <p>
+                    Jeśli chcesz podzielić się swoim doświadczeniem, pomysłem albo nawiązać współpracę, napisz do nas. Zależy nam na rozmowie prowadzonej z szacunkiem i bez obietnic, których technologia nie może spełnić.
+                </p>
+                <a href="mailto:nervovi.kontakt@gmail.com" class="cyber-btn">NAPISZ DO NAS &gt;</a>
+            </section>
+
+            <section class="glass-panel" style="text-align: center;">
+                <h2>TWÓRZMY TO WSPÓLNIE</h2>
+                <p>Najlepsze pomysły zaczynają się od uważnego słuchania. Jesteś osobą neurologiczną, bliską, specjalistą lub partnerem? Chętnie poznamy Twoją perspektywę.</p>
+                <a href="mailto:nervovi.kontakt@gmail.com" class="cyber-btn pink" style="padding: 15px 40px;">NAWIĄŻ KONTAKT</a>
+            </section>
+
+            <section class="glass-panel" id="kontakt">
+                <h2>KONTAKT &amp; SOCIAL MEDIA</h2>
+                <p>Obserwuj rozwój Nervovi i napisz do nas.</p>
+                <div class="contact-box">
+                    <span class="contact-label">// NAPISZ DO NAS</span>
+                    <a href="mailto:nervovi.kontakt@gmail.com" class="contact-value">nervovi.kontakt@gmail.com</a>
+                </div>
+                <div class="social-links">
+                    <a href="https://www.instagram.com/nervovi.official/" class="cyber-btn pink" target="_blank" rel="noopener noreferrer">INSTAGRAM</a>
+                    <a href="https://www.facebook.com/Nervovi.org" class="cyber-btn pink" target="_blank" rel="noopener noreferrer">FACEBOOK</a>
+                    <a href="https://www.linkedin.com/company/nervovi-org/" class="cyber-btn pink" target="_blank" rel="noopener noreferrer">LINKEDIN</a>
+                    <a href="https://www.tiktok.com/@nervovi1" class="cyber-btn pink" target="_blank" rel="noopener noreferrer">TIKTOK</a>
+                </div>
+            </section>
+
+            <footer>
+                STATUS: FUNDACJA W PRZYGOTOWANIU // NERVOVI<br><br>
+                © 2026 NERVOVI
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+        const mobileNav = document.getElementById('mobile-nav');
+
+        if (mobileMenuToggle && mobileNav) {
+            const closeMobileMenu = () => {
+                mobileNav.classList.remove('is-open');
+                mobileMenuToggle.setAttribute('aria-expanded', 'false');
+                mobileMenuToggle.setAttribute('aria-label', 'Otwórz menu');
+            };
+
+            mobileMenuToggle.addEventListener('click', () => {
+                const isOpen = mobileNav.classList.toggle('is-open');
+                mobileMenuToggle.setAttribute('aria-expanded', String(isOpen));
+                mobileMenuToggle.setAttribute('aria-label', isOpen ? 'Zamknij menu' : 'Otwórz menu');
+            });
+
+            mobileNav.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', closeMobileMenu);
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') closeMobileMenu();
+            });
+
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 768) closeMobileMenu();
+            });
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+        const canvas = document.getElementById('brain-canvas');
+        if (canvas) {
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            const particles = [];
+            const particleGroup = new THREE.Group();
+            scene.add(particleGroup);
+            const colors = [0x00f2ff, 0xff007a, 0x9d7bff, 0x00ff95, 0x4e4eff];
+            function createBrain() {
+                for (let i = 0; i < 2200; i++) {
+                    let x, y, z;
+                    const section = Math.random();
+                    if (section < 0.8) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const r = Math.sqrt(Math.random());
+                        x = 5 * Math.cos(angle) * r;
+                        y = 3.5 * Math.sin(angle) * r;
+                        if (x < -1) y *= 0.8;
+                        if (x > 1.5 && y < 0) y *= 0.5;
+                    } else if (section < 0.93) {
+                        x = -2.5 + (Math.random() - 0.5) * 2;
+                        y = -2.2 + (Math.random() - 0.5) * 1.5;
+                    } else {
+                        x = 0.5 + (Math.random() - 0.5) * 0.8;
+                        y = -3.5 + (Math.random() - 0.5) * 1.5;
+                    }
+                    z = (Math.random() - 0.5) * 1.2;
+                    const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.08), new THREE.MeshBasicMaterial({ color: colors[Math.floor(Math.random() * colors.length)], transparent: true, opacity: 0.8 }));
+                    mesh.position.set(x, y, z);
+                    mesh.userData = { origin: new THREE.Vector3(x, y, z), velocity: new THREE.Vector3(), friction: 0.9, spring: 0.012 };
+                    particleGroup.add(mesh);
+                    particles.push(mesh);
+                }
+            }
+            createBrain();
+            function handleResize() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.position.z = window.innerWidth < 600 ? 25 : 15;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+            window.addEventListener('resize', handleResize);
+            handleResize();
+            const mouse = new THREE.Vector3(-1000, -1000, 0);
+            function onMove(clientX, clientY) {
+                const rect = canvas.getBoundingClientRect();
+                const x = ((clientX - rect.left) / rect.width) * 2 - 1;
+                const y = -((clientY - rect.top) / rect.height) * 2 + 1;
+                const vector = new THREE.Vector3(x, y, 0.5).unproject(camera);
+                const dir = vector.sub(camera.position).normalize();
+                const dist = -camera.position.z / dir.z;
+                mouse.copy(camera.position).add(dir.multiplyScalar(dist));
+            }
+            window.addEventListener('mousemove', (e) => onMove(e.clientX, e.clientY));
+            window.addEventListener('touchmove', (e) => onMove(e.touches[0].clientX, e.touches[0].clientY), {passive: true});
+            function animate() {
+                requestAnimationFrame(animate);
+                particles.forEach(p => {
+                    const d = p.userData;
+                    const dist = p.position.distanceTo(mouse);
+                    if (dist < 2) {
+                        const push = new THREE.Vector3().subVectors(p.position, mouse).normalize();
+                        d.velocity.add(push.multiplyScalar((2 - dist) * 0.08));
+                    }
+                    const home = new THREE.Vector3().subVectors(d.origin, p.position).multiplyScalar(d.spring);
+                    d.velocity.add(home).multiplyScalar(d.friction);
+                    p.position.add(d.velocity);
+                });
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+    </script>
+</body>
+</html>
